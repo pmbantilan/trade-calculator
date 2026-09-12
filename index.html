@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#111827">
+<meta name="description" content="Trade Calculator — maximum trade after fee while keeping a ₱10 reserve">
+<link rel="manifest" href="manifest.json">
+<title>Trade Calculator</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f3f4f6;color:#111827;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+.wrap{max-width:520px;margin:auto;padding:24px 18px 32px}h1{font-size:28px;margin:3px 0 5px}.sub{color:#6b7280;margin-bottom:22px}
+label{display:block;font-weight:750;margin:14px 0 7px}input{width:100%;padding:15px;border:1px solid #d1d5db;border-radius:12px;font-size:20px;background:#fff}
+.card{margin-top:20px;background:#fff;border-radius:16px;padding:18px;box-shadow:0 2px 10px rgba(0,0,0,.06)}
+.row{display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid #e5e7eb}.row:last-child{border-bottom:0}
+.value{font-weight:800;text-align:right}.trade-value{color:#16a34a!important}.trade{margin-top:15px;padding:18px;border-radius:14px;background:#111827;color:#22c55e!important}
+.trade .big{font-size:31px;font-weight:900;margin-top:6px;color:#22c55e!important}.remaining{font-weight:900}
+.note{font-size:13px;color:#6b7280;margin-top:18px;line-height:1.45}
+button{width:100%;margin-top:14px;padding:14px;border:0;border-radius:12px;background:#e5e7eb;font-size:16px;font-weight:700}
+.install{display:none;background:#dcfce7;color:#166534;margin-top:14px}
+</style></head>
+<body><div class="wrap">
+<h1>Trade Calculator</h1><div class="sub">Maximum trade while keeping ₱10 in your balance.</div>
+<label for="balance">Available Balance (₱)</label>
+<input id="balance" type="number" inputmode="decimal" placeholder="Enter balance" step="0.01" autofocus>
+<label for="fee">Trading Fee (%)</label>
+<input id="fee" type="number" inputmode="decimal" value="0.1" step="0.01">
+<div class="card">
+<div class="row"><span>Amount to Trade</span><span class="value trade-value" id="trade">—</span></div>
+<div class="row"><span>Trading Fee</span><span class="value" id="feeAmt">—</span></div>
+<div class="row"><span>Total Used</span><span class="value" id="total">—</span></div>
+<div class="row"><span>Remaining Balance</span><span class="value remaining" id="remaining">—</span></div>
+<div class="trade"><div style="font-weight:800">PLACE THIS AMOUNT</div><div class="big" id="place">—</div></div>
+</div>
+<button onclick="clearAll()">Clear</button>
+<button id="install" class="install">Install Trade Calculator</button>
+<div class="note">Calculation: (Balance − ₱10) ÷ (1 + fee rate). Results are rounded to cents.</div>
+</div>
+<script>
+const money=n=>"₱"+n.toLocaleString("en-PH",{minimumFractionDigits:2,maximumFractionDigits:2});
+function calc(){const b=parseFloat(balance.value),pct=parseFloat(fee.value),rate=(isFinite(pct)?pct:0)/100;
+if(!isFinite(b)||b<=0){["trade","feeAmt","total","remaining","place"].forEach(id=>document.getElementById(id).textContent="—");return}
+const t=Math.max(0,Math.round(((b-10)/(1+rate))*100)/100),f=Math.round(t*rate*100)/100,total=Math.round((t+f)*100)/100,r=Math.round((b-total)*100)/100;
+trade.textContent=money(t);feeAmt.textContent=money(f);document.getElementById("total").textContent=money(total);remaining.textContent=money(r);place.textContent=money(t)}
+function clearAll(){balance.value="";calc();balance.focus()} balance.addEventListener("input",calc);fee.addEventListener("input",calc);
+let deferredPrompt;const install=document.getElementById("install");
+window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();deferredPrompt=e;install.style.display="block"});
+install.addEventListener("click",async()=>{if(!deferredPrompt)return;deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;install.style.display="none"});
+if("serviceWorker" in navigator) window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js"));
+</script></body></html>
