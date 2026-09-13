@@ -21,7 +21,7 @@ button{width:100%;margin-top:14px;padding:14px;border:0;border-radius:12px;backg
 </style></head>
 <body><div class="wrap">
 <h1>Trade Calculator</h1><div class="sub">Maximum trade while keeping ₱10 in your balance.</div>
-<label for="balance">Available Balance (₱)</label>
+<label for="balance">Available Balance</label>
 <input id="balance" type="number" inputmode="decimal" placeholder="Enter balance" step="0.01" autofocus>
 <label for="fee">Trading Fee (%)</label>
 <input id="fee" type="number" inputmode="decimal" value="0.1" step="0.01">
@@ -37,7 +37,7 @@ button{width:100%;margin-top:14px;padding:14px;border:0;border-radius:12px;backg
 <div class="note">Calculation: (Balance − ₱10) ÷ (1 + fee rate). Results are rounded to cents.</div>
 </div>
 <script>
-const money=n=>"₱"+n.toLocaleString("en-PH",{minimumFractionDigits:2,maximumFractionDigits:2});
+const money=n=>n.toLocaleString("en-PH",{minimumFractionDigits:2,maximumFractionDigits:2});
 function calc(){const b=parseFloat(balance.value),pct=parseFloat(fee.value),rate=(isFinite(pct)?pct:0)/100;
 if(!isFinite(b)||b<=0){["trade","feeAmt","total","remaining","place"].forEach(id=>document.getElementById(id).textContent="—");return}
 const t=Math.max(0,Math.round(((b-10)/(1+rate))*100)/100),f=Math.round(t*rate*100)/100,total=Math.round((t+f)*100)/100,r=Math.round((b-total)*100)/100;
