@@ -19,8 +19,16 @@ label{display:block;font-weight:750;margin:14px 0 7px}input{width:100%;padding:1
 button{width:100%;margin-top:14px;padding:14px;border:0;border-radius:12px;background:#e5e7eb;font-size:16px;font-weight:700}
 .install{display:none;background:#dcfce7;color:#166534;margin-top:14px}
 </style></head>
-<body><div class="wrap">
-<h1>Trade Calculator</h1><div class="sub">Maximum trade while keeping ₱10 in your balance.</div>
+<body>
+<div class="wrap">
+<h1>Trade Calculator</h1>
+<div class="sub">Trading and USDT withdrawal calculations.</div>
+<div style="display:flex;gap:8px;margin:18px 0">
+<button id="tabTrade" style="margin:0;background:#111827;color:#fff" onclick="showTab('tradeTab')">TRADE</button>
+<button id="tabWithdraw" style="margin:0" onclick="showTab('withdrawTab')">USDT WITHDRAWAL</button>
+</div>
+
+<section id="tradeTab">
 <label for="balance">Available Balance</label>
 <input id="balance" type="number" inputmode="decimal" placeholder="Enter balance" step="0.01" autofocus>
 <label for="fee">Trading Fee (%)</label>
@@ -32,19 +40,34 @@ button{width:100%;margin-top:14px;padding:14px;border:0;border-radius:12px;backg
 <div class="row"><span>Remaining Balance</span><span class="value remaining" id="remaining">—</span></div>
 <div class="trade"><div style="font-weight:800">PLACE THIS AMOUNT</div><div class="big" id="place">—</div></div>
 </div>
-<button onclick="clearAll()">Clear</button>
-<button id="install" class="install">Install Trade Calculator</button>
-<div class="note">Calculation: (Balance − ₱10) ÷ (1 + fee rate). Results are rounded to cents.</div>
+<button onclick="clearTrade()">Clear</button>
+</section>
+
+<section id="withdrawTab" style="display:none">
+<label for="phpNeeded">PHP Needed</label>
+<input id="phpNeeded" type="number" inputmode="decimal" placeholder="Enter PHP amount" step="0.01">
+<label for="usdtRate">USDT → PHP Rate</label>
+<input id="usdtRate" type="number" inputmode="decimal" placeholder="e.g. 58.50" step="0.01">
+<label for="usdRate">PHP → USD Rate</label>
+<input id="usdRate" type="number" inputmode="decimal" placeholder="e.g. 58.00" step="0.01">
+<div class="card">
+<div class="row"><span>USDT to Withdraw</span><span class="value trade-value" id="usdtNeeded">—</span></div>
+<div class="row"><span>USD Equivalent</span><span class="value" id="usdEquivalent">—</span></div>
+<div class="trade"><div style="font-weight:800">WITHDRAW THIS USDT</div><div class="big" id="withdrawAmount">—</div></div>
+</div>
+<button onclick="clearWithdraw()">Clear</button>
+</section>
+
+<div class="note">Withdrawal: USDT = PHP needed ÷ USDT→PHP rate. USD equivalent = PHP needed ÷ PHP→USD rate.</div>
 </div>
 <script>
 const money=n=>n.toLocaleString("en-PH",{minimumFractionDigits:2,maximumFractionDigits:2});
-function calc(){const b=parseFloat(balance.value),pct=parseFloat(fee.value),rate=(isFinite(pct)?pct:0)/100;
-if(!isFinite(b)||b<=0){["trade","feeAmt","total","remaining","place"].forEach(id=>document.getElementById(id).textContent="—");return}
-const t=Math.max(0,Math.round(((b-10)/(1+rate))*100)/100),f=Math.round(t*rate*100)/100,total=Math.round((t+f)*100)/100,r=Math.round((b-total)*100)/100;
-trade.textContent=money(t);feeAmt.textContent=money(f);document.getElementById("total").textContent=money(total);remaining.textContent=money(r);place.textContent=money(t)}
-function clearAll(){balance.value="";calc();balance.focus()} balance.addEventListener("input",calc);fee.addEventListener("input",calc);
-let deferredPrompt;const install=document.getElementById("install");
-window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();deferredPrompt=e;install.style.display="block"});
-install.addEventListener("click",async()=>{if(!deferredPrompt)return;deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;install.style.display="none"});
-if("serviceWorker" in navigator) window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js"));
-</script></body></html>
+function calcTrade(){const b=parseFloat(balance.value),p=parseFloat(fee.value),r=(isFinite(p)?p:0)/100;if(!isFinite(b)||b<=0){["trade","feeAmt","total","remaining","place"].forEach(id=>document.getElementById(id).textContent="—");return}const t=Math.max(0,Math.round(((b-10)/(1+r))*100)/100),f=Math.round(t*r*100)/100,total=Math.round((t+f)*100)/100,rem=Math.round((b-total)*100)/100;trade.textContent=money(t);feeAmt.textContent=money(f);document.getElementById("total").textContent=money(total);remaining.textContent=money(rem);place.textContent=money(t)}
+function calcWithdraw(){const p=parseFloat(phpNeeded.value),u=parseFloat(usdtRate.value),x=parseFloat(usdRate.value);if(isFinite(p)&&p>0&&isFinite(u)&&u>0){const a=p/u;usdtNeeded.textContent=money(a);withdrawAmount.textContent=money(a)}else{usdtNeeded.textContent="—";withdrawAmount.textContent="—"}usdEquivalent.textContent=isFinite(p)&&p>0&&isFinite(x)&&x>0?money(p/x):"—"}
+function clearTrade(){balance.value="";calcTrade();balance.focus()}
+function clearWithdraw(){phpNeeded.value="";usdtRate.value="";usdRate.value="";calcWithdraw();phpNeeded.focus()}
+function showTab(t){const a=t==="tradeTab";tradeTab.style.display=a?"block":"none";withdrawTab.style.display=a?"none":"block";tabTrade.style.background=a?"#111827":"#e5e7eb";tabTrade.style.color=a?"#fff":"#111827";tabWithdraw.style.background=a?"#e5e7eb":"#111827";tabWithdraw.style.color=a?"#111827":"#fff"}
+[balance,fee].forEach(e=>e.addEventListener("input",calcTrade));[phpNeeded,usdtRate,usdRate].forEach(e=>e.addEventListener("input",calcWithdraw));
+if("serviceWorker"in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js"));
+</script>
+</body></html>
